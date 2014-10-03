@@ -45,6 +45,8 @@ my @sqloutput=();
 #
 use strict;
 
+use Data::Dumper;
+
 # The CGI web generation stuff
 # This helps make it easy to generate active HTML content
 # from Perl
@@ -394,6 +396,7 @@ if ($action eq "base") {
   print '<input type="checkbox" name="what" value="candidates">Candidates</input>';
   print '<input type="checkbox" name="what" value="individuals">Individuals</input>';
   print '<input type="checkbox" name="what" value="opinions">Opinions</input>';
+  print '<input type="submit" value="Submit">';
   print "</form>";
 
 }
@@ -413,6 +416,7 @@ if ($action eq "base") {
 # the client-side javascript will invoke it to get raw data for overlaying on the map
 #
 #
+
 if ($action eq "near") {
   my $latne = param("latne");
   my $longne = param("longne");
@@ -423,6 +427,7 @@ if ($action eq "near") {
   my $cycle = param("cycle");
   my %what;
   
+  print Dumper %what;
   $format = "table" if !defined($format);
   $cycle = "1112" if !defined($cycle);
 
