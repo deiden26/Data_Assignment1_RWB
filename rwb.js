@@ -161,7 +161,7 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
-			what:	"committees,candidates"
+			what:	whatValsText
 		}, NewData);
 },
 
@@ -234,3 +234,17 @@ Start = function(location) {
 //
 	navigator.geolocation.watchPosition(Reposition);
 };
+
+
+//Function implemented by Craig and Danny
+var whatValsText = "committees,candidates,individuals,opinions";
+var whatVals = [];
+$(function() {
+	$('#whatForm .whatBox').click(function() { 
+		whatVals = [];
+		$('#whatForm :checked').each(function() {
+			whatVals.push($(this).val());
+		});
+		whatValsText = whatVals.join(",");
+	});
+});

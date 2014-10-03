@@ -348,6 +348,13 @@ if ($action eq "base") {
   print "<div id=\"map\" style=\"width:100\%; height:80\%\"></div>";
   
   
+  print '<form id="whatForm">';
+  print '<input type="checkbox" class="whatBox" value="committees">Committees';
+  print '<input type="checkbox" class="whatBox" value="candidates">Candidates';
+  print '<input type="checkbox" class="whatBox" value="individuals">Individuals';
+  print '<input type="checkbox" class="whatBox" value="opinions">Opinions';
+  print "</form>";
+
   #
   # And a div to populate with info about nearby stuff
   #
@@ -391,13 +398,6 @@ if ($action eq "base") {
     }
     print "<p><a href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
   }
-  print "<form action=''>";
-  print '<input type="checkbox" name="what" value="committees">Committees</input>';
-  print '<input type="checkbox" name="what" value="candidates">Candidates</input>';
-  print '<input type="checkbox" name="what" value="individuals">Individuals</input>';
-  print '<input type="checkbox" name="what" value="opinions">Opinions</input>';
-  print '<input type="submit" value="Submit">';
-  print "</form>";
 
 }
 
