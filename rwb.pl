@@ -389,6 +389,12 @@ if ($action eq "base") {
     }
     print "<p><a href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
   }
+  print "<form action=''>";
+  print '<input type="checkbox" name="what" value="committees">Committees</input>';
+  print '<input type="checkbox" name="what" value="candidates">Candidates</input>';
+  print '<input type="checkbox" name="what" value="individuals">Individuals</input>';
+  print '<input type="checkbox" name="what" value="opinions">Opinions</input>';
+  print "</form>";
 
 }
 
@@ -470,6 +476,7 @@ if ($action eq "near") {
       }
     }
   }
+
 }
 
 
