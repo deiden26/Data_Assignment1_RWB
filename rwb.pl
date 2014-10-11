@@ -358,9 +358,9 @@ if ($action eq "base") {
 
   my @cyclesList = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.candidate_master order by cycle", "COL");
 
-  print '<form id="cycleSelector" style="float: right;">';
+  print '<form id="cycleForm" style="float: right;">';
   print 'Election Cycle: ';
-  print '<select>';
+  print '<select id="cycleSelector">';
   foreach my $cycle (@cyclesList)
   {
     if ($cycle == 1112)

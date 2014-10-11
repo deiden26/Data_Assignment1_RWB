@@ -167,7 +167,8 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
-			what:	whatValsText
+			what:	whatValsText,
+			cycle: cycleVal
 		}, NewData);
 },
 
@@ -254,4 +255,13 @@ $(function() {
 		whatValsText = whatVals.join(",");
 		ViewShift();
 	});
+});
+
+var cycleVal = "1112";
+$(function() {
+	document.getElementById("cycleSelector").onchange = function() {
+		var selector = document.getElementById("cycleSelector");
+		cycleVal = selector.options[selector.selectedIndex].value;
+		ViewShift();
+	};
 });
