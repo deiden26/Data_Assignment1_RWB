@@ -28,6 +28,11 @@
 //
 $(document).ready(function() {
 	navigator.geolocation.getCurrentPosition(Start);
+	$('form input[type="checkbox"]').each(function (){
+		if($(this).hasClass('whatBox')){
+			$(this).attr('checked', true);
+		}
+	});
 });
 
 // Global variables
@@ -45,7 +50,8 @@ UpdateMapById = function(id, tag) {
 // 
 // first, we slice the string into an array of strings, one per 
 // line / data item
-	var rows  = $("#"+id).html().split("\n");
+	if ($("#"+id).html() != null)
+		var rows  = $("#"+id).html().split("\n");
 
 // then, for each line / data item
 	for (var i=0; i<rows.length; i++) {
