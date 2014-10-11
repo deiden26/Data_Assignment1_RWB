@@ -348,22 +348,31 @@ if ($action eq "base") {
   print "<div id=\"map\" style=\"width:100\%; height:80\%\"></div>";
   
   
-  print '<form id="whatForm">';
+  print '<form id="whatForm" style="float: left;">';
+  print 'Data Source(s): ';
   print '<input type="checkbox" class="whatBox" value="committees">Committees';
   print '<input type="checkbox" class="whatBox" value="candidates">Candidates';
   print '<input type="checkbox" class="whatBox" value="individuals">Individuals';
   print '<input type="checkbox" class="whatBox" value="opinions">Opinions';
   print "</form>";
 
-  my @cyclesList = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.candidate_master", "COL");
+  my @cyclesList = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.candidate_master order by cycle", "COL");
 
-  print '<form id="cycleSelector">';
+  print '<form id="cycleSelector" style="float: right;">';
+  print 'Election Cycle: ';
   print '<select>';
   foreach my $cycle (@cyclesList)
   {
-    print '<option value="'.$cycle.'">'.$cycle.'</option>';
+    if ($cycle == 1112)
+    {
+      print '<option value="'.$cycle.'" selected="selected">'.$cycle.'</option>';
+    }
+    else
+    {
+      print '<option value="'.$cycle.'">'.$cycle.'</option>';
+    }
   }
-  print '</select></form>';
+  print '</select></form><br><br>';
 
   #
   # And a div to populate with info about nearby stuff
