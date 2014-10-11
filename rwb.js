@@ -246,5 +246,6 @@ $(function() {
 			whatVals.push($(this).val());
 		});
 		whatValsText = whatVals.join(",");
+		ViewShift();
 	});
 });
