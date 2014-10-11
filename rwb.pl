@@ -355,6 +355,16 @@ if ($action eq "base") {
   print '<input type="checkbox" class="whatBox" value="opinions">Opinions';
   print "</form>";
 
+  my @cyclesList = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.candidate_master", "COL");
+
+  print '<form id="cycleSelector">';
+  print '<select>';
+  foreach my $cycle (@cyclesList)
+  {
+    print '<option value="'.$cycle.'">'.$cycle.'</option>';
+  }
+  print '</select></form>';
+
   #
   # And a div to populate with info about nearby stuff
   #
