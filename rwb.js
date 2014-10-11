@@ -36,7 +36,7 @@ $(document).ready(function() {
 });
 
 // Global variables
-var map, usermark, markers = [],
+var map, usermark, markers = [], loading = false,
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
@@ -130,6 +130,7 @@ NewData = function(data) {
 // All it does is copy the data that came back from the server
 // into the data division of the document.   This is a hidden 
 // division we use to cache it locally
+	loading = false;
 	$("#data").html(data);
 // Now that the new data is in the document, we use it to
 // update the map
@@ -159,17 +160,22 @@ ViewShift = function() {
 // 
 // This *initiates* the request back to the server.  When it is done,
 // the browser will call us back at the function NewData (given above)
-	$.get("rwb.pl",
-		{
-			act:	"near",
-			latne:	ne.lat(),
-			longne:	ne.lng(),
-			latsw:	sw.lat(),
-			longsw:	sw.lng(),
-			format:	"raw",
-			what:	whatValsText,
-			cycle: cycleVal
-		}, NewData);
+
+	if(!loading)
+	{
+		loading = true;
+		$.get("rwb.pl",
+			{
+				act:	"near",
+				latne:	ne.lat(),
+				longne:	ne.lng(),
+				latsw:	sw.lat(),
+				longsw:	sw.lng(),
+				format:	"raw",
+				what:	whatValsText,
+				cycle: cycleVal
+			}, NewData);
+	}
 },
 
 
