@@ -98,9 +98,9 @@ UpdateMap = function() {
 // commented out...  Those might help with the project...
 //
 	UpdateMapById("committee_data","COMMITTEE");
-	//UpdateMapById("candidate_data","CANDIDATE");
-	//UpdateMapById("individual_data", "INDIVIDUAL");
-	//UpdateMapById("opinion_data","OPINION");
+	UpdateMapById("candidate_data","CANDIDATE");
+	UpdateMapById("individual_data", "INDIVIDUAL");
+	UpdateMapById("opinion_data","OPINION");
 
 // When we're done with the map update, we mark the color division as
 // Ready.
@@ -240,7 +240,7 @@ Start = function(location) {
 var whatValsText = "committees,candidates,individuals,opinions";
 var whatVals = [];
 $(function() {
-	$('#whatForm .whatBox').click(function() { 
+	$('#whatForm .whatBox').click(function() {
 		whatVals = [];
 		$('#whatForm :checked').each(function() {
 			whatVals.push($(this).val());

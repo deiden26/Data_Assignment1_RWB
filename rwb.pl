@@ -427,7 +427,6 @@ if ($action eq "near") {
   my $cycle = param("cycle");
   my %what;
   
-  print Dumper %what;
   $format = "table" if !defined($format);
   $cycle = "1112" if !defined($cycle);
 
