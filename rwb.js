@@ -51,26 +51,28 @@ UpdateMapById = function(id, tag) {
 // first, we slice the string into an array of strings, one per 
 // line / data item
 	if ($("#"+id).html() != null)
+	{
 		var rows  = $("#"+id).html().split("\n");
 
-// then, for each line / data item
-	for (var i=0; i<rows.length; i++) {
-// we slice it into tab-delimited chunks (the fields)
-		var cols = rows[i].split("\t"),
-// grab specific fields like lat and long
-			lat = cols[0],
-			long = cols[1];
+	// then, for each line / data item
+		for (var i=0; i<rows.length; i++) {
+	// we slice it into tab-delimited chunks (the fields)
+			var cols = rows[i].split("\t"),
+	// grab specific fields like lat and long
+				lat = cols[0],
+				long = cols[1];
 
-// then add them to the map.   Here the "new google.maps.Marker"
-// creates the marker and adds it to the map at the lat/long position
-// and "markers.push" adds it to our list of markers so we can
-// delete it later 
-		markers.push(new google.maps.Marker({
-			map: map,
-			position: new google.maps.LatLng(lat,long),
-			title: tag+"\n"+cols.join("\n")
-		}));
+	// then add them to the map.   Here the "new google.maps.Marker"
+	// creates the marker and adds it to the map at the lat/long position
+	// and "markers.push" adds it to our list of markers so we can
+	// delete it later 
+			markers.push(new google.maps.Marker({
+				map: map,
+				position: new google.maps.LatLng(lat,long),
+				title: tag+"\n"+cols.join("\n")
+			}));
 
+		}
 	}
 },
 
