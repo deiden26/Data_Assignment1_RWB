@@ -94,9 +94,20 @@ ClearMarkers = function() {
 UpdateMap = function() {
 // We're consuming the data, so we'll reset the "color"
 // division to white and to indicate that we are updating
-	var color = $("#color");
-	color.css("background-color", "white")
-		.html("<b><blink>Updating Display...</blink></b>");
+	var committeeSummary = $("#committeeSummary");
+	var committeeSummaryContent = $("#committeeSummary .content");
+	committeeSummary.css("background-color", "white");
+	committeeSummaryContent.html("<blink>Updating Display...</blink>");
+
+	var individualSummary = $("#individualSummary");
+	var individualSummaryContent = $("#individualSummary .content");
+	individualSummary.css("background-color", "white");
+	individualSummaryContent.html("<blink>Updating Display...</blink>");
+
+	var opinionSummary = $("#opinionSummary");
+	var opinionSummaryContent = $("#opinionSummary .content");
+	opinionSummary.css("background-color", "white");
+	opinionSummaryContent.html("<blink>Updating Display...</blink>");
 
 // Remove any existing data markers from the map
 	ClearMarkers();
@@ -112,14 +123,20 @@ UpdateMap = function() {
 
 // When we're done with the map update, we mark the color division as
 // Ready.
-	color.html("Ready");
+	committeeSummaryContent.html("Ready");
+	individualSummaryContent.html("Ready");
+	opinionSummaryContent.html("Ready");
 
 // The hand-out code doesn't actually set the color according to the data
 // (that's the student's job), so we'll just assign it a random color for now
 	if (Math.random()>0.5) {
-		color.css("background-color", "blue");
+		committeeSummary.css("background-color", "#6699FF"); //blue
+		individualSummary.css("background-color", "#6699FF"); //blue
+		opinionSummary.css("background-color", "#6699FF"); //blue
 	} else {
-		color.css("background-color", "red");
+		committeeSummary.css("background-color", "#FF6666"); //red
+		individualSummary.css("background-color", "#FF6666"); //red
+		opinionSummary.css("background-color", "#FF6666"); //red
 	}
 
 },
@@ -151,8 +168,14 @@ ViewShift = function() {
 
 // Now we need to update our data based on those bounds
 // first step is to mark the color division as white and to say "Querying"
-	$("#color").css("background-color","white")
-		.html("<b><blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink></b>");
+	$("#committeeSummary").css("background-color","white");
+	$("#committeeSummary .content").html("<blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink>");
+
+	$("#individualSummary").css("background-color","white");
+	$("#individualSummary .content").html("<blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink>");
+
+	$("#opinionSummary").css("background-color","white");
+	$("#opinionSummary .content").html("<blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink>");
 
 // Now we make a web request.   Here we are invoking rwb.pl on the 
 // server, passing it the act, latne, etc, parameters for the current
@@ -231,8 +254,14 @@ Start = function(location) {
 
 // set the color for "color" division of the document to white
 // And change it to read "waiting for first position"
-	$("#color").css("background-color", "white")
-		.html("<b><blink>Waiting for first position</blink></b>");
+	$("#committeeSummary").css("background-color", "white");
+	$("#committeeSummary .content").html("<blink>Waiting for first position</blink>");
+
+	$("#individualSummary").css("background-color", "white");
+	$("#individualSummary .content").html("<blink>Waiting for first position</blink>");
+
+	$("#opinionSummary").css("background-color", "white");
+	$("#opinionSummary .content").html("<blink>Waiting for first position</blink>");
 
 //
 // These lines register callbacks.   If the user scrolls the map, 
@@ -260,6 +289,21 @@ $(function() {
 		$('#whatForm :checked').each(function() {
 			whatVals.push($(this).val());
 		});
+
+		if(whatVals.indexOf( 'committees' ) > -1)
+			$('#committeeSummary').show();
+		else
+			$('#committeeSummary').hide();
+		if(whatVals.indexOf( 'individuals' ) > -1)
+			$('#individualSummary').show();
+		else
+			$('#individualSummary').hide();
+		if(whatVals.indexOf( 'opinions' ) > -1)
+			$('#opinionSummary').show();
+		else
+			$('#opinionSummary').hide();
+
+
 		whatValsText = whatVals.join(",");
 		ViewShift();
 	});

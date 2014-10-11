@@ -339,13 +339,15 @@ if ($action eq "base") {
   #
   # And something to color (Red, White, or Blue)
   #
-  print "<div id=\"color\" style=\"width:100\%; height:10\%\"></div>";
+  print "<div id=\"committeeSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Committee Summary</b><div class='content'></div></div>";
+  print "<div id=\"individualSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Individual Summary</b><div class='content'></div></div>";
+  print "<div id=\"opinionSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Opinion Summary<div class='content'></b></div></div>";
 
   #
   #
   # And a map which will be populated later
   #
-  print "<div id=\"map\" style=\"width:100\%; height:80\%\"></div>";
+  print "<div id=\"map\" style=\"width:100\%; height:70\%\"></div>";
   
   
   print '<form id="whatForm" style="float: left;">';
