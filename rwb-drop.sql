@@ -11,6 +11,7 @@ delete from rwb_users;
 delete from rwb_actions;
 delete from rwb_opinions;
 delete from rwb_cs_ind_to_geo;
+delete from rwb_invite;
 
 commit;
 
@@ -19,6 +20,7 @@ drop table rwb_opinions;
 drop table rwb_permissions;
 drop table rwb_actions;
 drop table rwb_users;
+drop table rwb_invite;
 
 
 

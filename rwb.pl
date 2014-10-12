@@ -44,6 +44,7 @@ my @sqloutput=();
 # as a CGI script.
 #
 use strict;
+use warnings;
 
 use Data::Dumper;
 
@@ -121,6 +122,7 @@ my $logincomplain=0;
 #
 my $action;
 my $run;
+my $code; # One time use code for inviting users
 
 
 if (defined(param("act"))) { 
@@ -151,6 +153,13 @@ if (defined(param("debug"))) {
     # debug default from script
   }
 }
+
+# One time only code for inviting users
+# if (defined(param("verify"))) {
+#   $verify = param("verify");
+# } else {
+#   $verify = undef; 
+# }
 
 $outputdebugcookiecontent=$debug;
 
@@ -485,7 +494,50 @@ if ($action eq "near") {
 
 
 if ($action eq "invite-user") { 
-  print h2("Invite User Functionality Is Unimplemented");
+  # If user has permissions (check sql), then they can invite users
+  # else display error
+  #if (!UserCan($user, "invite-user")) {
+  # print h2("You do not have the required permissions to invite users.");
+  #} else {
+    if (!$run) {
+      print start_form(-name=>'Invite user'),
+          h2('Invite your friends to Red, White, and Blue!'),
+      "Email: ",textfield(-name=>'email'), p,
+          hidden(-name=>'act',default=>['invite-user']),
+          hidden(-name=>'run',default=>['1']),
+        submit,
+          end_form;
+    } else {
+      # Come up with a link to send user
+      my $link = 'http://murphy.wot.eecs.northwestern.edu/~cwo258/rwb/rwb.pl?act=sign-up&verify=';
+      # generate random verification string
+      my @chars = ("A".."Z", "a".."z");
+      my $string;
+      $string .= $chars[rand @chars] for 1..8;
+
+      $link = $link . $string;
+
+      # add to table
+      my $email = param('email');
+      my $error;
+      $error=InviteAdd($email,$string,$user);
+
+      # Send to user
+      my $subject = 'Welcome to Red, White, and Blue';
+      my $message = $user . ' has added you to Red, White, ' .
+                    'and Blue! Click on the following link to accept ' .
+                    'the invitation: ' . $link;
+       
+      open(MAIL, "| mail -s \"" . $subject . "\" " . $email);
+      print MAIL $message;
+      close(MAIL);
+      print "Email Sent Successfully to ". $email . "\n";
+    }
+  #}
+}
+
+if ($action eq 'sign-up') {
+  
 }
 
 if ($action eq "give-opinion-data") { 
@@ -891,6 +943,11 @@ sub UserAdd {
   return $@;
 }
 
+sub InviteAdd { 
+  eval { ExecSQL($dbuser,$dbpasswd,
+     "insert into rwb_invite (email,verify,referer) values (?,?,?)",undef,@_);};
+  return $@;
+}
 #
 # Delete a user
 # returns false on success, $error string on failure
