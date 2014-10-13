@@ -6,12 +6,12 @@
 -- This code drops the student *part* of the Red, White, 
 -- and Blue data schema.  
 
+delete from rwb_invite;
 delete from rwb_permissions;
 delete from rwb_users;
 delete from rwb_actions;
 delete from rwb_opinions;
 delete from rwb_cs_ind_to_geo;
-delete from rwb_invite;
 
 commit;
 

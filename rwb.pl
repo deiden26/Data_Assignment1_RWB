@@ -80,7 +80,7 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-my $dbuser="dbe261";
+my $dbuser="cwo258";
 my $dbpasswd="guest";
 
 
@@ -122,7 +122,7 @@ my $logincomplain=0;
 #
 my $action;
 my $run;
-my $code; # One time use code for inviting users
+my $verify; # One time use code for inviting users
 
 
 if (defined(param("act"))) { 
@@ -227,6 +227,15 @@ if ($action eq "logout") {
   $user = "anon";
   $password = "anonanon";
   $run = 1;
+}
+
+if ($action eq "logoutVer") {
+  $deletecookie=1;
+  $action = "sign-up";
+  $user = "anon";
+  $password = "anonanon";
+  $run = 0;
+  $verify = param('verify');
 }
 
 
@@ -503,8 +512,8 @@ if ($action eq "invite-user") {
       print start_form(-name=>'Invite user'),
           h2('Invite your friends to Red, White, and Blue!'),
       "Email: ",textfield(-name=>'email'), p,
-          hidden(-name=>'act',default=>['invite-user']),
-          hidden(-name=>'run',default=>['1']),
+          hidden(-name=>'act',-default=>['invite-user'], -override=>1),
+          hidden(-name=>'run',-default=>['1'], -override=>1),
         submit,
           end_form;
     } else {
@@ -520,24 +529,74 @@ if ($action eq "invite-user") {
       # add to table
       my $email = param('email');
       my $error;
-      $error=InviteAdd($email,$string,$user);
 
-      # Send to user
-      my $subject = 'Welcome to Red, White, and Blue';
-      my $message = $user . ' has added you to Red, White, ' .
-                    'and Blue! Click on the following link to accept ' .
-                    'the invitation: ' . $link;
+      print "Email: $email\n";
+      print "Verify: $string\n";
+      print "Referer: $user\n";
+      #$error=InviteAdd($email,$string,$user);
+      print "FUUUUUUUCCCCCCKKKKKKK";
+
+      if ($error) { 
+        print "$user\n";
+        print "Can't add user because: $error";
+      } else {
+        print "Added user $email as referred by $user\n";
+      }
+
+      # # Send to user
+      # my $subject = 'Welcome to Red, White, and Blue';
+      # my $message = $user . ' has added you to Red, White, ' .
+      #               'and Blue! Click on the following link to accept ' .
+      #               'the invitation: ' . $link;
        
-      open(MAIL, "| mail -s \"" . $subject . "\" " . $email);
-      print MAIL $message;
-      close(MAIL);
-      print "Email Sent Successfully to ". $email . "\n";
+      # open(MAIL, "| mail -s \"" . $subject . "\" " . $email);
+      # print MAIL $message;
+      # close(MAIL);
+      # print "Email Sent Successfully to ". $email . "\n";
     }
   #}
 }
 
 if ($action eq 'sign-up') {
+  # If verify code is in the table, then give user sign up code
   
+  $verify = param('verify');
+  if ($user ne "anon") {
+    print p('You are logged in as another user, but you can log out.');
+    print "<p><a href=\"rwb.pl?act=logoutVer&run=1&verify=" . $verify . "\">Logout</a></p>";
+  } elsif (!$run && VerifyOK()) {
+      print start_form(-name=>'SignUp'),
+    h2('Sign up'),
+      "Name: ", textfield(-name=>'name'), p,
+          "Email: ", textfield(-name=>'email'), p,
+        "Password: ", textfield(-name=>'password'), p,
+        hidden(-name=>'run',-default=>['1'], -override=>1),
+        hidden(-name=>'act',-default=>['sign-up'], -override=>1),
+        hidden(-name=>'verify', -default=>[$verify], -override=>1),
+      submit,
+        end_form;
+  } elsif (!VerifyOK()) {
+    print h2("You do not have a valid link to sign up");
+  } else {
+      my $name=param('name');
+      my $email=param('email');
+      my $password=param('password');
+      my @userList;
+      eval {
+        @userList = ExecSQL($dbuser, $dbpasswd, 'select referer from rwb_invite where verify=?', 'USERLIST', $verify);
+      };
+      my $user = shift @userList;
+      my $error;
+      # my $user = $userList[0];
+      # print h2($user);
+      $error=UserAdd($name,$password,$email,@$user);
+      if ($error) { 
+        print "$user\n";
+        print "Can't add user because: $error";
+      } else {
+        print "Added user $name $email as referred by $user\n";
+      }
+  }
 }
 
 if ($action eq "give-opinion-data") { 
@@ -947,6 +1006,16 @@ sub InviteAdd {
   eval { ExecSQL($dbuser,$dbpasswd,
      "insert into rwb_invite (email,verify,referer) values (?,?,?)",undef,@_);};
   return $@;
+}
+
+sub VerifyOK {
+  my @col = undef;
+  eval {@col=ExecSQL($dbuser,$dbpasswd, "select count(*) from rwb_invite where verify=?","COL", $verify);};
+  if ($@) { 
+    return 0;
+  } else {
+    return $col[0]>0;
+  }
 }
 #
 # Delete a user
