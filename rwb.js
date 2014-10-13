@@ -297,9 +297,10 @@ Start = function(location) {
 // zooms the map, etc, then our function "ViewShift" (defined above
 // will be called after the map is redrawn
 //
-	google.maps.event.addListener(map,"bounds_changed",ViewShift);
+	//google.maps.event.addListener(map,"bounds_changed",ViewShift);
 	//google.maps.event.addListener(map,"center_changed",ViewShift);
 	//google.maps.event.addListener(map,"zoom_changed",ViewShift);
+	google.maps.event.addListener(map,"idle",ViewShift);
 
 //
 // Finally, tell the browser that if the current location changes, it
