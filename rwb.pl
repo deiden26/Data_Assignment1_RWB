@@ -44,7 +44,7 @@ my @sqloutput=();
 # as a CGI script.
 #
 use strict;
-use warnings;
+# use warnings;
 
 use Data::Dumper;
 
@@ -533,8 +533,7 @@ if ($action eq "invite-user") {
       print "Email: $email\n";
       print "Verify: $string\n";
       print "Referer: $user\n";
-      #$error=InviteAdd($email,$string,$user);
-      print "FUUUUUUUCCCCCCKKKKKKK";
+      # $error=InviteAdd($email,$string,$user);
 
       if ($error) { 
         print "$user\n";
@@ -544,15 +543,15 @@ if ($action eq "invite-user") {
       }
 
       # # Send to user
-      # my $subject = 'Welcome to Red, White, and Blue';
-      # my $message = $user . ' has added you to Red, White, ' .
-      #               'and Blue! Click on the following link to accept ' .
-      #               'the invitation: ' . $link;
+      my $subject = 'Welcome to Red, White, and Blue';
+      my $message = $user . ' has added you to Red, White, ' .
+                    'and Blue! Click on the following link to accept ' .
+                    'the invitation: ' . $link;
        
-      # open(MAIL, "| mail -s \"" . $subject . "\" " . $email);
-      # print MAIL $message;
-      # close(MAIL);
-      # print "Email Sent Successfully to ". $email . "\n";
+      open(MAIL, "| mail -s \"" . $subject . "\" " . $email);
+      print MAIL $message;
+      close(MAIL);
+      print "Email Sent Successfully to ". $email . "\n";
     }
   #}
 }
@@ -640,9 +639,9 @@ if ($action eq "add-user") {
       my $error;
       $error=UserAdd($name,$password,$email,$user);
       if ($error) { 
-	print "Can't add user because: $error";
+	       print "Can't add user because: $error";
       } else {
-	print "Added user $name $email as referred by $user\n";
+	       print "Added user $name $email as referred by $user\n";
       }
     }
   }
