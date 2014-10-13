@@ -499,6 +499,15 @@ if ($action eq "near") {
 	print $str;
       }
     }
+
+    ($str,$error) = IndividualSummary($latne,$longne,$latsw,$longsw,$cycle,$format);
+    if (!$error) {
+      if ($format eq "table") { 
+  print "<h2>Nearby individual summary</h2>$str";
+      } else {
+  print $str;
+      }
+    }
   }
   if ($what{opinions}) {
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
@@ -850,7 +859,33 @@ sub Individuals {
     }
   }
 }
+sub IndividualSummary {
+  my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+  my @result;
+  my @rows;
+  eval { 
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[0] = defined $result[0] ? [("Republican",pop @result)] : [("Republican", 0)];
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[1] = defined $result[0] ? [("Democrat",pop @result)] : [("Democrat", 0)];
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[2] = defined $result[0] ? [("Other",pop @result)] : [("Other", 0)];
 
+  };
+  
+  if ($@) { 
+    print $@;
+    return (undef,$@);
+  } else {
+    if ($format eq "table") { 
+      return (MakeTable("individual_summary_data","2D",
+      ["Party", "Amount"],
+      @rows),$@);
+    } else {
+      return (MakeRaw("individual_summary_data","2D",@rows),$@);
+    }
+  }
+}
 
 #
 # Generate a table of nearby opinions

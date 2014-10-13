@@ -153,26 +153,45 @@ UpdateMap = function() {
 		committeeSummaryData[cols[0]] = cols[1];
 	}
 
+	var individualSummaryData = {};
+	rows  = $("#individual_summary_data").html().split("\n");
+	for (var i=0; i<rows.length; i++)
+	{
+		var cols = rows[i].split("\t");
+		individualSummaryData[cols[0]] = cols[1];
+	}
+
 // When we're done with the map update, we mark the color division as
 // Ready.
 	committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']);
-	individualSummaryContent.html("Ready");
+	individualSummaryContent.html("Republican: $"+individualSummaryData['Republican']+"\tDemocrat: $"+individualSummaryData['Democrat']+"\tOther: $"+individualSummaryData['Other']);
 	opinionSummaryContent.html("Ready");
 
 // The hand-out code doesn't actually set the color according to the data
 // (that's the student's job), so we'll just assign it a random color for now
-
+	var colorMix;
+	var ratio;
+	
 	if (committeeSummaryData['Republican'] == 0 && committeeSummaryData['Democrat'] == 0)
-		var colorMix = "ffffff";
+		colorMix = "ffffff";
 	else
 	{
-		var committeeRatio = Number(committeeSummaryData['Republican'])/(Number(committeeSummaryData['Republican']) + Number(committeeSummaryData['Democrat']));
-		var colorMix = mixColors("FF6666", "6699FF", committeeRatio); //red, blue, ratio
+		ratio = Number(committeeSummaryData['Republican'])/(Number(committeeSummaryData['Republican']) + Number(committeeSummaryData['Democrat']));
+		colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
 	}
+	committeeSummary.css("background-color", "#"+colorMix);
 
-	committeeSummary.css("background-color", "#"+colorMix); //blue
-	individualSummary.css("background-color", "#"+colorMix); //blue
-	opinionSummary.css("background-color", "#"+colorMix); //blue
+	if (individualSummaryData['Republican'] == 0 && individualSummaryData['Democrat'] == 0)
+		colorMix = "ffffff";
+	else
+	{
+		ratio = Number(individualSummaryData['Republican'])/(Number(individualSummaryData['Republican']) + Number(individualSummaryData['Democrat']));
+		colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
+	}
+	individualSummary.css("background-color", "#"+colorMix);
+
+
+	opinionSummary.css("background-color", "#ffffff");
 },
 
 //
