@@ -61,8 +61,7 @@ function mixColors(color1, color2, ratio)
 }
 
 // Global variables
-var map, usermark, markers = [], loading = false,
-
+var map, usermark, markers = [],
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
 // the document.
@@ -174,9 +173,6 @@ UpdateMap = function() {
 	committeeSummary.css("background-color", "#"+colorMix); //blue
 	individualSummary.css("background-color", "#"+colorMix); //blue
 	opinionSummary.css("background-color", "#"+colorMix); //blue
-
-	loading = false;
-
 },
 
 //
@@ -223,21 +219,17 @@ ViewShift = function() {
 // This *initiates* the request back to the server.  When it is done,
 // the browser will call us back at the function NewData (given above)
 
-	if(!loading)
-	{
-		loading = true;
-		$.get("rwb.pl",
-			{
-				act:	"near",
-				latne:	ne.lat(),
-				longne:	ne.lng(),
-				latsw:	sw.lat(),
-				longsw:	sw.lng(),
-				format:	"raw",
-				what:	whatValsText,
-				cycle: cycleVal
-			}, NewData);
-	}
+	$.get("rwb.pl",
+		{
+			act:	"near",
+			latne:	ne.lat(),
+			longne:	ne.lng(),
+			latsw:	sw.lat(),
+			longsw:	sw.lng(),
+			format:	"raw",
+			what:	whatValsText,
+			cycle: cycleVal
+		}, NewData);
 },
 
 
@@ -252,7 +244,7 @@ Reposition = function(pos) {
 
 // ... and scroll the map to be centered at that position
 // this should trigger the map to call us back at ViewShift()
-	map.setCenter(new google.maps.LatLng(lat,long));
+//	map.setCenter(new google.maps.LatLng(lat,long));
 // ... and set our user's marker on the map to the new position
 	usermark.setPosition(new google.maps.LatLng(lat,long));
 },
@@ -306,8 +298,8 @@ Start = function(location) {
 // will be called after the map is redrawn
 //
 	google.maps.event.addListener(map,"bounds_changed",ViewShift);
-	google.maps.event.addListener(map,"center_changed",ViewShift);
-	google.maps.event.addListener(map,"zoom_changed",ViewShift);
+	//google.maps.event.addListener(map,"center_changed",ViewShift);
+	//google.maps.event.addListener(map,"zoom_changed",ViewShift);
 
 //
 // Finally, tell the browser that if the current location changes, it
