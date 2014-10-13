@@ -35,6 +35,31 @@ $(document).ready(function() {
 	});
 });
 
+function mixColors(color1, color2, ratio)
+{
+	var color1RGB = 
+	{
+		red: parseInt(color1.substring(0,2) ,16),
+		green: parseInt(color1.substring(2,4) ,16),
+		blue: parseInt(color1.substring(4,6) ,16)
+	};
+	var color2RGB = 
+	{
+		red: parseInt(color2.substring(0,2) ,16),
+		green: parseInt(color2.substring(2,4) ,16),
+		blue: parseInt(color2.substring(4,6) ,16)
+	};
+	var colorMix = 
+	{
+		red: Math.floor(ratio*color1RGB.red + (1-ratio)*color2RGB.red),
+		green: Math.floor(ratio*color1RGB.green + (1-ratio)*color2RGB.green),
+		blue: Math.floor(ratio*color1RGB.blue + (1-ratio)*color2RGB.blue)
+	};
+
+	var colorMixString = colorMix.red.toString(16) + colorMix.green.toString(16) + colorMix.blue.toString(16);
+	return colorMixString;
+}
+
 // Global variables
 var map, usermark, markers = [], loading = false,
 
@@ -121,23 +146,36 @@ UpdateMap = function() {
 	UpdateMapById("individual_data", "INDIVIDUAL");
 	UpdateMapById("opinion_data","OPINION");
 
+	var committeeSummaryData = {};
+	var rows  = $("#committee_summary_data").html().split("\n");
+	for (var i=0; i<rows.length; i++)
+	{
+		var cols = rows[i].split("\t");
+		committeeSummaryData[cols[0]] = cols[1];
+	}
+
 // When we're done with the map update, we mark the color division as
 // Ready.
-	committeeSummaryContent.html("Ready");
+	committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']);
 	individualSummaryContent.html("Ready");
 	opinionSummaryContent.html("Ready");
 
 // The hand-out code doesn't actually set the color according to the data
 // (that's the student's job), so we'll just assign it a random color for now
-	if (Math.random()>0.5) {
-		committeeSummary.css("background-color", "#6699FF"); //blue
-		individualSummary.css("background-color", "#6699FF"); //blue
-		opinionSummary.css("background-color", "#6699FF"); //blue
-	} else {
-		committeeSummary.css("background-color", "#FF6666"); //red
-		individualSummary.css("background-color", "#FF6666"); //red
-		opinionSummary.css("background-color", "#FF6666"); //red
+
+	if (committeeSummaryData['Republican'] == 0 && committeeSummaryData['Democrat'] == 0)
+		var colorMix = "ffffff";
+	else
+	{
+		var committeeRatio = Number(committeeSummaryData['Republican'])/(Number(committeeSummaryData['Republican']) + Number(committeeSummaryData['Democrat']));
+		var colorMix = mixColors("FF6666", "6699FF", committeeRatio); //red, blue, ratio
 	}
+
+	committeeSummary.css("background-color", "#"+colorMix); //blue
+	individualSummary.css("background-color", "#"+colorMix); //blue
+	opinionSummary.css("background-color", "#"+colorMix); //blue
+
+	loading = false;
 
 },
 
@@ -149,7 +187,6 @@ NewData = function(data) {
 // All it does is copy the data that came back from the server
 // into the data division of the document.   This is a hidden 
 // division we use to cache it locally
-	loading = false;
 	$("#data").html(data);
 // Now that the new data is in the document, we use it to
 // update the map

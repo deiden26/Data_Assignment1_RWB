@@ -339,9 +339,9 @@ if ($action eq "base") {
   #
   # And something to color (Red, White, or Blue)
   #
-  print "<div id=\"committeeSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Committee Summary</b><div class='content'></div></div>";
-  print "<div id=\"individualSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Individual Summary</b><div class='content'></div></div>";
-  print "<div id=\"opinionSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Opinion Summary<div class='content'></b></div></div>";
+  print "<div id=\"committeeSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Committee Summary</b><pre div class='content'></div></div>";
+  print "<div id=\"individualSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Individual Summary</b><pre div class='content'></div></div>";
+  print "<div id=\"opinionSummary\" style=\"width:100\%; height:auto\%;border:solid; border-width:1px\"><b>Opinion Summary<pre div class='content'></b></div></div>";
 
   #
   #
@@ -468,6 +468,15 @@ if ($action eq "near") {
 	print "<h2>Nearby committees</h2>$str";
       } else {
 	print $str;
+      }
+    }
+
+    ($str,$error) = CommitteeSummary($latne,$longne,$latsw,$longsw,$cycle,$format);
+    if (!$error) {
+      if ($format eq "table") { 
+  print "<h2>Nearby committee summary</h2>$str";
+      } else {
+  print $str;
       }
     }
   }
@@ -760,7 +769,33 @@ sub Committees {
     }
   }
 }
+sub CommitteeSummary {
+  my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+  my @result;
+  my @rows;
+  eval { 
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[0] = defined $result[0] ? [("Republican",pop @result)] : [("Republican", 0)];
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[1] = defined $result[0] ? [("Democrat",pop @result)] : [("Democrat", 0)];
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    $rows[2] = defined $result[0] ? [("Other",pop @result)] : [("Other", 0)];
 
+  };
+  
+  if ($@) { 
+    print $@;
+    return (undef,$@);
+  } else {
+    if ($format eq "table") { 
+      return (MakeTable("committee_summary_data","2D",
+      ["Party", "Amount"],
+      @rows),$@);
+    } else {
+      return (MakeRaw("committee_summary_data","2D",@rows),$@);
+    }
+  }
+}
 
 #
 # Generate a table of nearby candidates
