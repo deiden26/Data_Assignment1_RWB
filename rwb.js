@@ -247,7 +247,7 @@ ViewShift = function() {
 			longsw:	sw.lng(),
 			format:	"raw",
 			what:	whatValsText,
-			cycle: cycleVal
+			cycle: cycleValsText
 		}, NewData);
 },
 
@@ -331,10 +331,9 @@ Start = function(location) {
 
 //Function implemented by Craig and Danny
 var whatValsText = "committees,candidates,individuals,opinions";
-var whatVals = [];
 $(function() {
 	$('#whatForm .whatBox').click(function() {
-		whatVals = [];
+		var whatVals = [];
 		$('#whatForm :checked').each(function() {
 			whatVals.push($(this).val());
 		});
@@ -358,11 +357,14 @@ $(function() {
 	});
 });
 
-var cycleVal = "1112";
+var cycleValsText = "('1112')";
 $(function() {
-	document.getElementById("cycleSelector").onchange = function() {
-		var selector = document.getElementById("cycleSelector");
-		cycleVal = selector.options[selector.selectedIndex].value;
+	$('#cycleForm .cycleBox').click(function() {
+		var cycleVals = [];
+		$('#cycleForm :checked').each(function() {
+			cycleVals.push("'" + $(this).val() + "'");
+		});
+		cycleValsText = "("+cycleVals.join(",")+")";
 		ViewShift();
-	};
+	});
 });

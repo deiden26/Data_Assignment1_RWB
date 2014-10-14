@@ -350,7 +350,7 @@ if ($action eq "base") {
   print "<div id=\"map\" style=\"width:100\%; height:70\%\"></div>";
   
   
-  print '<form id="whatForm" style="float: left;">';
+  print '<form id="whatForm">';
   print 'Data Source(s): ';
   print '<input type="checkbox" class="whatBox" value="committees">Committees';
   print '<input type="checkbox" class="whatBox" value="candidates">Candidates';
@@ -360,21 +360,13 @@ if ($action eq "base") {
 
   my @cyclesList = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.candidate_master order by cycle", "COL");
 
-  print '<form id="cycleForm" style="float: right;">';
-  print 'Election Cycle: ';
-  print '<select id="cycleSelector">';
+  print '<form id="cycleForm">';
+  print 'Election Cycle(s): ';
   foreach my $cycle (@cyclesList)
   {
-    if ($cycle == 1112)
-    {
-      print '<option value="'.$cycle.'" selected="selected">'.$cycle.'</option>';
-    }
-    else
-    {
-      print '<option value="'.$cycle.'">'.$cycle.'</option>';
-    }
+      print '<input type="checkbox" class="cycleBox" value='.$cycle.'>'.$cycle;
   }
-  print '</select></form><br><br>';
+  print '</form><br>';
 
   #
   # And a div to populate with info about nearby stuff
@@ -445,11 +437,16 @@ if ($action eq "near") {
   my $longsw = param("longsw");
   my $whatparam = param("what");
   my $format = param("format");
-  my $cycle = param("cycle");
+  my $cycles = param("cycle");
   my %what;
   
+
   $format = "table" if !defined($format);
-  $cycle = "1112" if !defined($cycle);
+  $cycles = "('1112')" if !defined($cycles);
+  if ($cycles =~ /[[:alpha:]]/)
+  {
+    $cycles = "('1112')";
+  }
 
   if (!defined($whatparam) || $whatparam eq "all") { 
     %what = ( committees => 1, 
@@ -462,7 +459,7 @@ if ($action eq "near") {
 	       
 
   if ($what{committees}) { 
-    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby committees</h2>$str";
@@ -471,7 +468,7 @@ if ($action eq "near") {
       }
     }
 
-    ($str,$error) = CommitteeSummary($latne,$longne,$latsw,$longsw,$cycle,$format);
+    ($str,$error) = CommitteeSummary($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
   print "<h2>Nearby committee summary</h2>$str";
@@ -481,7 +478,7 @@ if ($action eq "near") {
     }
   }
   if ($what{candidates}) {
-    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby candidates</h2>$str";
@@ -491,7 +488,7 @@ if ($action eq "near") {
     }
   }
   if ($what{individuals}) {
-    my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby individuals</h2>$str";
@@ -500,7 +497,7 @@ if ($action eq "near") {
       }
     }
 
-    ($str,$error) = IndividualSummary($latne,$longne,$latsw,$longsw,$cycle,$format);
+    ($str,$error) = IndividualSummary($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
   print "<h2>Nearby individual summary</h2>$str";
@@ -510,7 +507,7 @@ if ($action eq "near") {
     }
   }
   if ($what{opinions}) {
-    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby opinions</h2>$str";
@@ -763,7 +760,7 @@ sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 25",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle in ".$cycle." and latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -783,11 +780,11 @@ sub CommitteeSummary {
   my @result;
   my @rows;
   eval { 
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[0] = defined $result[0] ? [("Republican",pop @result)] : [("Republican", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[1] = defined $result[0] ? [("Democrat",pop @result)] : [("Democrat", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[2] = defined $result[0] ? [("Other",pop @result)] : [("Other", 0)];
 
   };
@@ -815,7 +812,7 @@ sub Candidates {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cand_name, cand_pty_affiliation, cand_st1, cand_st2, cand_city, cand_st, cand_zip from cs339.candidate_master natural join cs339.cand_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?  and rownum <= 25",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cand_name, cand_pty_affiliation, cand_st1, cand_st2, cand_city, cand_st, cand_zip from cs339.candidate_master natural join cs339.cand_id_to_geo where cycle in ".$cycle." and latitude>? and latitude<? and longitude>? and longitude<?  and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -844,7 +841,7 @@ sub Individuals {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, name, city, state, zip_code, employer, transaction_amnt from cs339.individual natural join cs339.ind_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?  and rownum <= 25",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, name, city, state, zip_code, employer, transaction_amnt from cs339.individual natural join cs339.ind_to_geo where cycle in ".$cycle." and latitude>? and latitude<? and longitude>? and longitude<?  and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -864,11 +861,11 @@ sub IndividualSummary {
   my @result;
   my @rows;
   eval { 
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[0] = defined $result[0] ? [("Republican",pop @result)] : [("Republican", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[1] = defined $result[0] ? [("Democrat",pop @result)] : [("Democrat", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle=? and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$cycle,$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[2] = defined $result[0] ? [("Other",pop @result)] : [("Other", 0)];
 
   };
