@@ -159,6 +159,20 @@ create table rwb_opinions (
 );
 
 --
+--
+-- Just usernames and invite codes
+-- Added when user is invited
+-- Closed when invitation has been accepted 
+--
+
+create table rwb_invite (
+  referer varchar(64) not null references rwb_users(name),
+  email    varchar(256) not null UNIQUE
+    constraint email_fine CHECK (email LIKE '%@%'),
+  verify varchar(8) not null UNIQUE 
+);
+
+--
 -- Create a set of actions
 --
 --
