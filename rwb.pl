@@ -547,6 +547,10 @@ if ($action eq "invite-user") {
   #if (!UserCan($user, "invite-user")) {
   # print h2("You do not have the required permissions to invite users.");
   #} else {
+
+  if (!UserCan($user, "invite-users") && !UserCan($user, "manage-users")) {
+    print h2("You do not have permissions to invite users");
+  } else {
     if (!$run) {
       print start_form(-name=>'Invite user'),
           h2('Invite your friends to Red, White, and Blue!'),
@@ -614,7 +618,7 @@ if ($action eq "invite-user") {
       close(MAIL);
       print "Email Sent Successfully to ". $email . "\n";
     }
-  #}
+  }
 }
 
 if ($action eq 'sign-up') {
@@ -656,7 +660,6 @@ if ($action eq 'sign-up') {
       my $error;
 
      
-      # my $user = $userList[0];
       $error=UserAdd($name,$password,$email,@$user);
       if ($error) { 
         print "$user\n";
@@ -666,7 +669,6 @@ if ($action eq 'sign-up') {
         if ($error) {
           print "Can't delete user because: $error";
         } else {
-          #print "Added user $name $email as referred by $user\n";
           foreach $permission (@permissionList) {
             $error = GiveUserPerm($name, $permission);
             if ($error) {
@@ -677,7 +679,10 @@ if ($action eq 'sign-up') {
         }
         }
       }
-      
+      if (!$error) {
+        print "You've been successfully signed up for Red, White, and Blud! Click the link below to login: ";
+        print "<p><a href=\"rwb.pl?act=login\">Login</a></p>";
+      }
   }
 }
 
