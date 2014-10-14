@@ -80,7 +80,7 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-my $dbuser="cwo258";
+my $dbuser="dbe261";
 my $dbpasswd="guest";
 
 
@@ -533,7 +533,7 @@ if ($action eq "invite-user") {
       print "Email: $email\n";
       print "Verify: $string\n";
       print "Referer: $user\n";
-      # $error=InviteAdd($email,$string,$user);
+      $error=InviteAdd($email,$string,$user);
 
       if ($error) { 
         print "$user\n";
@@ -582,10 +582,11 @@ if ($action eq 'sign-up') {
       my $password=param('password');
       my @userList;
       eval {
-        @userList = ExecSQL($dbuser, $dbpasswd, 'select referer from rwb_invite where verify=?', 'USERLIST', $verify);
+        @userList = ExecSQL($dbuser, $dbpasswd, 'select referer from rwb_invite where verify=?', undef, $verify);
       };
       my $user = shift @userList;
       my $error;
+     
       # my $user = $userList[0];
       # print h2($user);
       $error=UserAdd($name,$password,$email,@$user);
@@ -593,7 +594,12 @@ if ($action eq 'sign-up') {
         print "$user\n";
         print "Can't add user because: $error";
       } else {
-        print "Added user $name $email as referred by $user\n";
+        $error = InviteDel($verify);
+        if ($error) {
+          print "Can't delete user because: $error";
+        } else {
+          print "Added user $name $email as referred by $user\n";
+        }
       }
   }
 }
@@ -1025,6 +1031,10 @@ sub UserDel {
   return $@;
 }
 
+sub InviteDel {
+  eval {ExecSQL($dbuser, $dbpasswd, "delete from rwb_invite where verify=?", undef, @_);};
+  return $@;
+}
 
 #
 # Give a user a permission
