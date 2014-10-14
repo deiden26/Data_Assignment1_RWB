@@ -33,6 +33,14 @@ $(document).ready(function() {
 			$(this).attr('checked', true);
 		}
 	});
+	$('form input[type="checkbox"]').each(function (){
+		if($(this).hasClass('cycleBox') && $(this).val() === "1112"){
+			$(this).attr('checked', true);
+		}
+		else if ($(this).hasClass('cycleBox')){
+			$(this).attr('checked', false);
+		}
+	});
 });
 
 function mixColors(color1, color2, ratio)
