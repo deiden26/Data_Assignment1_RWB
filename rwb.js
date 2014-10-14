@@ -169,11 +169,32 @@ UpdateMap = function() {
 		individualSummaryData[cols[0]] = cols[1];
 	}
 
+	var opinionSummaryData = {};
+	rows  = $("#opinion_summary_data").html().split("\t");
+	opinionSummaryData["total"] = rows[2]; //should just be an int (no rounding)
+	if (opinionSummaryData["total"] == 0)
+	{
+		opinionSummaryData["avg"] = 0;
+		opinionSummaryData["avgDemString"] = "0%";
+		opinionSummaryData["avgRepString"] = "0%";
+		opinionSummaryData["stdDev"] = 0;
+		opinionSummaryData["stdDevString"] = "0%";
+	}
+	else
+	{
+		opinionSummaryData["avg"] = Math.round(parseFloat(rows[0]) * 1000)/1000; //rounding
+		opinionSummaryData["avgDemString"] = opinionSummaryData["avg"]*100 + "%";
+		opinionSummaryData["avgRepString"] = 100 - opinionSummaryData["avg"]*100 + "%";
+		opinionSummaryData["stdDev"] = Math.round(parseFloat(rows[1]) * 1000)/1000; //rounding
+		opinionSummaryData["stdDevString"] = opinionSummaryData["stdDev"]*100 + "%";
+	}
+
+
 // When we're done with the map update, we mark the color division as
 // Ready.
 	committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']);
 	individualSummaryContent.html("Republican: $"+individualSummaryData['Republican']+"\tDemocrat: $"+individualSummaryData['Democrat']+"\tOther: $"+individualSummaryData['Other']);
-	opinionSummaryContent.html("Ready");
+	opinionSummaryContent.html("Democrat: "+opinionSummaryData["avgDemString"]+"\tRepublican: "+opinionSummaryData["avgRepString"]+"\tStandard Deviation: "+opinionSummaryData["stdDevString"]+"\tNumber of Opinions: "+opinionSummaryData["total"]);
 
 // The hand-out code doesn't actually set the color according to the data
 // (that's the student's job), so we'll just assign it a random color for now
@@ -198,8 +219,14 @@ UpdateMap = function() {
 	}
 	individualSummary.css("background-color", "#"+colorMix);
 
+	if (opinionSummaryData['total'] == 0)
+		colorMix = "ffffff";
+	else
+	{
+		colorMix = mixColors("FF6666", "6699FF", 1 - opinionSummaryData['avg']); //red, blue, ratio
+	}
+	opinionSummary.css("background-color", "#"+colorMix);
 
-	opinionSummary.css("background-color", "#ffffff");
 },
 
 //
