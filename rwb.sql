@@ -169,7 +169,8 @@ create table rwb_invite (
   referer varchar(64) not null references rwb_users(name),
   email    varchar(256) not null UNIQUE
     constraint email_fine CHECK (email LIKE '%@%'),
-  verify varchar(8) not null UNIQUE 
+  verify varchar(8) not null UNIQUE,
+  permissions varchar(256) 
 );
 
 --

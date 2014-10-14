@@ -551,6 +551,12 @@ if ($action eq "invite-user") {
       print start_form(-name=>'Invite user'),
           h2('Invite your friends to Red, White, and Blue!'),
       "Email: ",textfield(-name=>'email'), p,
+          h5("Also, specify the permissions you'd like to give your new user: "), p,
+          checkbox(-type=>checkbox, -name=>'Give Opinion Of Current Location', -value=>1), p,
+          checkbox(-type=>checkbox, -name=>'Geolocate Individual Contributors', -value=>1), p,
+          checkbox(-type=>checkbox, -name=>'Invite Users', -value=>1), p,
+          checkbox(-type=>checkbox, -name=>'Add Users', -value=>1), p,
+          checkbox(-type=>checkbox, -name=>'Manage Users', -value=>1), p,
           hidden(-name=>'act',-default=>['invite-user'], -override=>1),
           hidden(-name=>'run',-default=>['1'], -override=>1),
         submit,
@@ -565,14 +571,30 @@ if ($action eq "invite-user") {
 
       $link = $link . $string;
 
+      # Permissions to be added to table in form perm1, perm2, perm3, etc...
+      my $perms = '';
+      if (param('Give Opinion Of Current Location') eq 1) {
+        $perms = $perms . 'give-opinion-data,';
+      }  
+      if (param('Geolocate Individual Contributors') eq 1) {
+        $perms = $perms . 'give-cs-ind-data,';
+      } 
+      if (param('Invite Users') eq 1) {
+        $perms = $perms . 'invite-users,';
+      } 
+      if (param('Add Users') eq 1) {
+        $perms = $perms . 'add-users,';
+      } 
+      if (param('Manage Users') eq 1) {
+        $perms = $perms . 'manage-users,';
+      }
+      chop($perms); # Take out the last comma
+
       # add to table
       my $email = param('email');
       my $error;
 
-      print "Email: $email\n";
-      print "Verify: $string\n";
-      print "Referer: $user\n";
-      $error=InviteAdd($email,$string,$user);
+      $error=InviteAdd($email,$string,$user,$perms);
 
       if ($error) { 
         print "$user\n";
@@ -620,14 +642,21 @@ if ($action eq 'sign-up') {
       my $email=param('email');
       my $password=param('password');
       my @userList;
+      my @rows;
+      my $permission;
       eval {
-        @userList = ExecSQL($dbuser, $dbpasswd, 'select referer from rwb_invite where verify=?', undef, $verify);
+        @userList = ExecSQL($dbuser, $dbpasswd, "select referer from rwb_invite where verify=?", undef, $verify);
       };
+      eval {
+        @rows = ExecSQL($dbuser, $dbpasswd, "select permissions from rwb_invite where verify=?", undef, $verify);
+      };
+      my $permissions = shift @rows;
+      my @permissionList = split(/,/, "@$permissions");
       my $user = shift @userList;
       my $error;
+
      
       # my $user = $userList[0];
-      # print h2($user);
       $error=UserAdd($name,$password,$email,@$user);
       if ($error) { 
         print "$user\n";
@@ -637,9 +666,18 @@ if ($action eq 'sign-up') {
         if ($error) {
           print "Can't delete user because: $error";
         } else {
-          print "Added user $name $email as referred by $user\n";
+          #print "Added user $name $email as referred by $user\n";
+          foreach $permission (@permissionList) {
+            $error = GiveUserPerm($name, $permission);
+            if ($error) {
+              print "Can't delete user because: $error";
+            } else {
+              #print "Added user $name $email as referred by $user\n";
+            }
+        }
         }
       }
+      
   }
 }
 
@@ -1100,7 +1138,7 @@ sub UserAdd {
 
 sub InviteAdd { 
   eval { ExecSQL($dbuser,$dbpasswd,
-     "insert into rwb_invite (email,verify,referer) values (?,?,?)",undef,@_);};
+     "insert into rwb_invite (email,verify,referer,permissions) values (?,?,?,?)",undef,@_);};
   return $@;
 }
 
