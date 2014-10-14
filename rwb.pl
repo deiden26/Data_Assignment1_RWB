@@ -532,6 +532,15 @@ if ($action eq "near") {
 	print $str;
       }
     }
+
+    ($str,$error) = OpinionSummary($latne,$longne,$latsw,$longsw,$cycles,$format);
+    if (!$error) {
+      if ($format eq "table") { 
+  print "<h2>Nearby opinions summary</h2>$str";
+      } else {
+  print $str;
+      }
+    }
   }
 
 }
@@ -820,6 +829,15 @@ if ($action eq "revoke-perm-user") {
   print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 }
 
+
+#
+# 
+#
+# Generate opinion data in the evanston area
+# Note: 0 is red (republican) and 1 is blue (democrat)
+#
+#
+#
 if ($action eq "opinonGen")
 {
   for (my $i = 0; $i<10 ; $i++)
@@ -1033,7 +1051,26 @@ sub Opinions {
     }
   }
 }
-
+sub OpinionSummary {
+  my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+  my @rows;
+  eval { 
+    @rows = ExecSQL($dbuser, $dbpasswd, "select AVG(color) ,STDDEV(color), COUNT(*) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
+  };
+  
+  if ($@) { 
+    print $@;
+    return (undef,$@);
+  } else {
+    if ($format eq "table") { 
+      return (MakeTable("opinion_summary_data","2D",
+      ["Average", "Standard Deviation", "Total"],
+      @rows),$@);
+    } else {
+      return (MakeRaw("opinion_summary_data","2D",@rows),$@);
+    }
+  }
+}
 
 #
 # Generate a table of available permissions
