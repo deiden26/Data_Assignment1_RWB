@@ -6,6 +6,7 @@
 -- This code drops the student *part* of the Red, White, 
 -- and Blue data schema.  
 
+delete from rwb_invite;
 delete from rwb_permissions;
 delete from rwb_users;
 delete from rwb_actions;
@@ -19,6 +20,7 @@ drop table rwb_opinions;
 drop table rwb_permissions;
 drop table rwb_actions;
 drop table rwb_users;
+drop table rwb_invite;
 
 
 
