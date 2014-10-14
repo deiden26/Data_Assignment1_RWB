@@ -447,7 +447,6 @@ if ($action eq "base") {
 # the client-side javascript will invoke it to get raw data for overlaying on the map
 #
 #
-
 if ($action eq "near") {
   my $latne = param("latne");
   my $longne = param("longne");
@@ -460,10 +459,10 @@ if ($action eq "near") {
   
 
   $format = "table" if !defined($format);
-  $cycles = "('1112')" if !defined($cycles);
+  $cycles = "()" if !defined($cycles);
   if ($cycles =~ /[[:alpha:]]/)
   {
-    $cycles = "('1112')";
+    $cycles = "()";
   }
 
   if (!defined($whatparam) || $whatparam eq "all") { 
@@ -821,7 +820,16 @@ if ($action eq "revoke-perm-user") {
   print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 }
 
-
+if ($action eq "opinonGen")
+{
+  for (my $i = 0; $i<10 ; $i++)
+  {
+    my $latitude = 42.0588 + rand(4) * 0.001 * (rand(1) > 0.5 ? -1 : 1); #latitude within default evanston view ($latitude = 42.0588 +- 0.004)
+    my $longitude = -87.6847 + rand(1.5) * 0.01 * (rand(1) > 0.5 ? -1 : 1); #longitude within default evanston view ($longitude = -87.6847 +- 0.015)
+    my $color =  int(rand(2)); #color is either 0 (red) or 1 (blue)
+    eval { ExecSQL($dbuser,$dbpasswd,"insert into rwb_opinions (SUBMITTER,COLOR,LATITUDE, LONGITUDE) values (?,?,?,?)",undef,"root", $color, $latitude, $longitude);};
+  }
+}
 
 #
 #
