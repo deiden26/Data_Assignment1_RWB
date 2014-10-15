@@ -576,7 +576,7 @@ if ($action eq "invite-user") {
       my $perms = '';
       if (param('Give Opinion Of Current Location') eq 1) {
         $perms = $perms . 'give-opinion-data,';
-      }  
+      }
       if (param('Geolocate Individual Contributors') eq 1) {
         $perms = $perms . 'give-cs-ind-data,';
       } 
@@ -658,8 +658,7 @@ if ($action eq 'sign-up') {
 
      
       $error=UserAdd($name,$password,$email,@$user);
-      if ($error) { 
-        print "$user\n";
+      if ($error) {
         print "Can't add user because: $error";
       } else {
         $error = InviteDel($verify);
@@ -669,15 +668,22 @@ if ($action eq 'sign-up') {
           foreach $permission (@permissionList) {
             $error = GiveUserPerm($name, $permission);
             if ($error) {
-              print "Can't delete user because: $error";
+              print "Can't give permissions because: $error";
             } else {
               #print "Added user $name $email as referred by $user\n";
             }
         }
+         $error = GiveUserPerm($name, 'query-fec-data');
+        $error = GiveUserPerm($name, 'query-opinion-data');
+        if ($error) {
+              print "Can't give permissions because: $error";
+            } else {
+              #print "Added user $name $email as referred by $user\n";
+            }
         }
       }
       if (!$error) {
-        print "You've been successfully signed up for Red, White, and Blud! Click the link below to login: ";
+        print "You've been successfully signed up for Red, White, and Blue! Click the link below to login: ";
         print "<p><a href=\"rwb.pl?act=login\">Login</a></p>";
       }
   }
@@ -735,7 +741,6 @@ if ($action eq "give-opinion-data") {
       } else {
         print h2("We could not retrieve your coordinates");
       }
-
       print "Coordinates are: $lat, $long";
     }
   }
