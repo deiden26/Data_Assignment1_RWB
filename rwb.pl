@@ -683,8 +683,62 @@ if ($action eq 'sign-up') {
   }
 }
 
-if ($action eq "give-opinion-data") { 
-  print h2("Giving Location Opinion Data Is Unimplemented");
+if ($action eq "give-opinion-data") {
+  # Need to include necessary js files
+  #
+  # Google maps API, needed to draw the map
+  #
+  print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+  print "<script src=\"http://maps.google.com/maps/api/js?sensor=false\" type=\"text/javascript\"></script>";
+  
+  #
+  # The Javascript portion of our app
+  #
+  print "<script type=\"text/javascript\" src=\"give-opinion.js\"> </script>";
+
+
+  # Can assign a 'color' to their current location
+  if (!UserCan($user, 'give-opinion-data')) {
+    print h2('You do not have permission to give opinion data.')
+  } else {
+    # Need to get their current location
+    if (!$run) {
+      print '<form name="Assign Color">';
+      print h2('Assign a color to your current location: ');
+      print '<input value="-1" type="radio" name="color">Red';
+      print '<input value="1" type="radio" name="color">Blue';
+      print '<input value="0" type="radio" name="color" selected>Neutral<br><br>';
+      print '<input type="hidden" name="run" value="1">';
+      print '<input type="hidden" name="act" value="give-opinion-data">';
+      print '<input type="hidden" name="lat" id="latitude">';
+      print '<input type="hidden" name="long" id="longitude">';
+      print '<input type="submit" value="Submit">';
+      print '</form>';
+    
+    } else {
+      # get geolocation data; If it doesn't exist, give error, don't proceed
+      my $lat;
+      my $long;
+      my $color;
+      my $error;
+
+      if (defined(param("lat") && defined(param("long")))) {
+        $lat = param("lat");
+        $long = param("long");
+        $color = param("color");
+        $error = OpinionAdd($user, $color, $lat, $long);
+        if ($error) {
+          print "Can't add opinion because: $error";
+        } else {
+          print "Added opinion to rwb_opinions\n";
+        }
+      } else {
+        print h2("We could not retrieve your coordinates");
+      }
+
+      print "Coordinates are: $lat, $long";
+    }
+  }
 }
 
 if ($action eq "give-cs-ind-data") { 
@@ -1141,6 +1195,13 @@ sub UserAdd {
 sub InviteAdd { 
   eval { ExecSQL($dbuser,$dbpasswd,
      "insert into rwb_invite (email,verify,referer,permissions) values (?,?,?,?)",undef,@_);};
+  return $@;
+}
+
+sub OpinionAdd {
+  print 'aijo;dsfio;jafsd';
+  eval { ExecSQL($dbuser,$dbpasswd,
+     "insert into rwb_opinions (submitter,color,latitude,longitude) values (?,?,?,?)",undef,@_);};
   return $@;
 }
 

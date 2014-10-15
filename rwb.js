@@ -376,3 +376,9 @@ $(function() {
 		ViewShift();
 	});
 });
+
+$(function() {
+	$('#giveOpinionForm').submit(function() {
+		alert('Yayyy');
+	})
+})
