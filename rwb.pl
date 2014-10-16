@@ -900,6 +900,7 @@ print end_html;
 #
 sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+
   my @rows;
   eval { 
     @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle in ".$cycle." and latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
@@ -919,18 +920,46 @@ sub Committees {
 }
 sub CommitteeSummary {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+
+  my @committeeCount = (0);
+  my $iterationCount = 0;
+  while ($iterationCount < 5 && $committeeCount[0] < 30)
+  {
+    eval { 
+      @committeeCount = ExecSQL($dbuser, $dbpasswd, "select count(*) from committee_donations natural join cs339.committee_master natural join cs339.cmte_id_to_geo where cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 40","COL",$latsw,$latne,$longsw,$longne);
+    };
+    if ($@) {
+      return (undef,$@);
+    }
+    else
+    {
+      if ($committeeCount[0] < 30)
+      {
+        $latsw = $latsw - 1;
+        $longsw = $longsw + 1;
+        $latne = $latne + 1;
+        $longne = $longne + 1;
+        $iterationCount++;
+      }
+    }
+  }
+
+  if ($committeeCount[0] < 30)
+  {
+    print "<div style='display:none;' id='committeeScaleError'>".$committeeCount[0]."</div>";
+  }
+
   my @result;
   my @rows;
   eval { 
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from committee_donations natural join cs339.committee_master natural join cs339.cmte_id_to_geo where CMTE_PTY_AFFILIATION in ('REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[0] = defined $result[0] ? [("Republican",pop @result)] : [("Republican", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from committee_donations natural join cs339.committee_master natural join cs339.cmte_id_to_geo where CMTE_PTY_AFFILIATION in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[1] = defined $result[0] ? [("Democrat",pop @result)] : [("Democrat", 0)];
-    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from ( (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_comm) union (select cmte_id,TRANSACTION_AMNT from cs339.comm_to_cand) ) natural join cs339.committee_master natural join cs339.cand_id_to_geo where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
+    @result = ExecSQL($dbuser, $dbpasswd, "select SUM(TRANSACTION_AMNT) from committee_donations natural join cs339.committee_master natural join cs339.cmte_id_to_geo where CMTE_PTY_AFFILIATION not in ('d', 'Dem', 'LIB', 'DEM', 'dem', 'DM', 'D', 'REP', 'rep', 'R', 'r', 'Rep', 'GOP', 'CON') and cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 25","COL",$latsw,$latne,$longsw,$longne);
     $rows[2] = defined $result[0] ? [("Other",pop @result)] : [("Other", 0)];
-
   };
-  
+
   if ($@) { 
     print $@;
     return (undef,$@);
@@ -1000,6 +1029,35 @@ sub Individuals {
 }
 sub IndividualSummary {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+
+  my @individualCount = (0);
+  my $iterationCount = 0;
+  while ($iterationCount < 5 && $individualCount[0] < 30)
+  {
+    eval { 
+      @individualCount = ExecSQL($dbuser, $dbpasswd, "select count(*) from cs339.individual natural join cs339.ind_to_geo natural join (select cmte_id,CMTE_PTY_AFFILIATION from cs339.committee_master) where cycle in ".$cycle." and latitude>? and latitude<?  and longitude>? and longitude<? and rownum <= 40","COL",$latsw,$latne,$longsw,$longne);
+    };
+    if ($@) {
+      return (undef,$@);
+    }
+    else
+    {
+      if ($individualCount[0] < 30)
+      {
+        $latsw = $latsw - 1;
+        $longsw = $longsw + 1;
+        $latne = $latne + 1;
+        $longne = $longne + 1;
+        $iterationCount++;
+      }
+    }
+  }
+
+  if ($individualCount[0] < 30)
+  {
+    print "<div style='display:none;' id='individualScaleError'>".$individualCount[0]."</div>";
+  }
+
   my @result;
   my @rows;
   eval { 
@@ -1053,9 +1111,39 @@ sub Opinions {
 }
 sub OpinionSummary {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+
+
+  my @opinionCount = (0);
+  my $iterationCount = 0;
+  while ($iterationCount < 5 && $opinionCount[0] < 30)
+  {
+    eval { 
+      @opinionCount = ExecSQL($dbuser, $dbpasswd, "select COUNT(*) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 40","COL",$latsw,$latne,$longsw,$longne);
+    };
+    if ($@) {
+      return (undef,$@);
+    }
+    else
+    {
+      if ($opinionCount[0] < 30)
+      {
+        $latsw = $latsw - 1;
+        $longsw = $longsw + 1;
+        $latne = $latne + 1;
+        $longne = $longne + 1;
+        $iterationCount++;
+      }
+    }
+  }
+
+  if ($opinionCount[0] < 30)
+  {
+    print "<div style='display:none;' id='opinionScaleError'>".$opinionCount[0]."</div>";
+  }
+
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select AVG(color) ,STDDEV(color), COUNT(*) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 25",undef,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select AVG(color) ,STDDEV(color), COUNT(*) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<? and rownum <= 40",undef,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
