@@ -214,6 +214,10 @@ INSERT INTO rwb_permissions (name,action) VALUES('root','give-opinion-data');
 -- A user that's been added will be able to do all but manage-users
 --
 
+--
+-- Create a table to be used for committee summary querries
+--
+CREATE TABLE committee_donations AS select name as cmte_nm,cycle,sum(TRANSACTION_AMNT) as TRANSACTION_AMNT from ((select name, TRANSACTION_AMNT, cycle from cs339.comm_to_cand) union (select name, TRANSACTION_AMNT, cycle from cs339.comm_to_comm)) group by name,cycle;
 
 
 quit;

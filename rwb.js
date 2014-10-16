@@ -153,53 +153,121 @@ UpdateMap = function() {
 	UpdateMapById("individual_data", "INDIVIDUAL");
 	UpdateMapById("opinion_data","OPINION");
 
-	var committeeSummaryData = {};
-	var rows  = $("#committee_summary_data").html().split("\n");
-	for (var i=0; i<rows.length; i++)
-	{
-		var cols = rows[i].split("\t");
-		committeeSummaryData[cols[0]] = cols[1];
-	}
-
-	var individualSummaryData = {};
-	rows  = $("#individual_summary_data").html().split("\n");
-	for (var i=0; i<rows.length; i++)
-	{
-		var cols = rows[i].split("\t");
-		individualSummaryData[cols[0]] = cols[1];
-	}
-
-// When we're done with the map update, we mark the color division as
-// Ready.
-	committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']);
-	individualSummaryContent.html("Republican: $"+individualSummaryData['Republican']+"\tDemocrat: $"+individualSummaryData['Democrat']+"\tOther: $"+individualSummaryData['Other']);
-	opinionSummaryContent.html("Ready");
-
-// The hand-out code doesn't actually set the color according to the data
-// (that's the student's job), so we'll just assign it a random color for now
+//Initialize the color variables
 	var colorMix;
 	var ratio;
+
+//If there is committee summary data...
+	if (!!document.getElementById("committee_summary_data"))
+	{
+		//Get the data
+		var committeeSummaryData = {};
+		var rows  = $("#committee_summary_data").html().split("\n");
+		for (var i=0; i<rows.length; i++)
+		{
+			var cols = rows[i].split("\t");
+			committeeSummaryData[cols[0]] = cols[1];
+		}
+
+		//Put the data in a div
+		if (!!document.getElementById("committeeScaleError"))
+			committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']+"\tNotice: fewer than 30 data points");
+		else
+			committeeSummaryContent.html("Republican: $"+committeeSummaryData['Republican']+"\tDemocrat: $"+committeeSummaryData['Democrat']+"\tOther: $"+committeeSummaryData['Other']);
+		
+		//color the div
+		if (committeeSummaryData['Republican'] == 0 && committeeSummaryData['Democrat'] == 0)
+			colorMix = "ffffff";
+		else
+		{
+			ratio = Number(committeeSummaryData['Republican'])/(Number(committeeSummaryData['Republican']) + Number(committeeSummaryData['Democrat']));
+			colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
+		}
+		committeeSummary.css("background-color", "#"+colorMix);
+
+	}
+	else
+	{
+		committeeSummaryContent.html("Error: query failed");
+	}
+
+//If there is individual summary data...
+	if (!!document.getElementById("individual_summary_data"))
+	{
+		//get the data
+		var individualSummaryData = {};
+		rows  = $("#individual_summary_data").html().split("\n");
+		for (var i=0; i<rows.length; i++)
+		{
+			var cols = rows[i].split("\t");
+			individualSummaryData[cols[0]] = cols[1];
+		}
+
+		//put the data in a div
+		if (!!document.getElementById("individualScaleError"))
+			individualSummaryContent.html("Republican: $"+individualSummaryData['Republican']+"\tDemocrat: $"+individualSummaryData['Democrat']+"\tOther: $"+individualSummaryData['Other']+"\tNotice: fewer than 30 data points");
+		else
+			individualSummaryContent.html("Republican: $"+individualSummaryData['Republican']+"\tDemocrat: $"+individualSummaryData['Democrat']+"\tOther: $"+individualSummaryData['Other']);
 	
-	if (committeeSummaryData['Republican'] == 0 && committeeSummaryData['Democrat'] == 0)
-		colorMix = "ffffff";
+		//color the div
+		if (individualSummaryData['Republican'] == 0 && individualSummaryData['Democrat'] == 0)
+			colorMix = "ffffff";
+		else
+		{
+			ratio = Number(individualSummaryData['Republican'])/(Number(individualSummaryData['Republican']) + Number(individualSummaryData['Democrat']));
+			colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
+		}
+		individualSummary.css("background-color", "#"+colorMix);
+	}
 	else
 	{
-		ratio = Number(committeeSummaryData['Republican'])/(Number(committeeSummaryData['Republican']) + Number(committeeSummaryData['Democrat']));
-		colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
+		committeeSummaryContent.html("Error: query failed");
 	}
-	committeeSummary.css("background-color", "#"+colorMix);
 
-	if (individualSummaryData['Republican'] == 0 && individualSummaryData['Democrat'] == 0)
-		colorMix = "ffffff";
+//If there is opinion summary data...
+	if (!!document.getElementById("opinion_summary_data"))
+	{
+		//get the data
+		var opinionSummaryData = {};
+		rows  = $("#opinion_summary_data").html().replace(/\n|\r/g, "").split("\t");
+		opinionSummaryData["total"] = rows[2]; //should just be an int (no rounding)
+		if (opinionSummaryData["total"] == 0)
+		{
+			opinionSummaryData["avg"] = 0;
+			opinionSummaryData["avgDemString"] = "0%";
+			opinionSummaryData["avgRepString"] = "0%";
+			opinionSummaryData["stdDev"] = 0;
+			opinionSummaryData["stdDevString"] = "0%";
+		}
+		else
+		{
+			opinionSummaryData["avg"] = Math.round(parseFloat(rows[0]) * 10000)/10000; //rounding
+			opinionSummaryData["avgDemString"] = opinionSummaryData["avg"]*100 + "%";
+			opinionSummaryData["avgRepString"] = 100 - opinionSummaryData["avg"]*100 + "%";
+			opinionSummaryData["stdDev"] = Math.round(parseFloat(rows[1]) * 10000)/10000; //rounding
+			opinionSummaryData["stdDevString"] = opinionSummaryData["stdDev"]*100 + "%";
+		}
+
+		//put the data in a div
+		if (!!document.getElementById("opinionScaleError"))
+			opinionSummaryContent.html("Democrat: "+opinionSummaryData["avgDemString"]+"\tRepublican: "+opinionSummaryData["avgRepString"]+"\tStandard Deviation: "+opinionSummaryData["stdDevString"]+"\tNumber of Opinions: "+opinionSummaryData["total"]+"\tNotice: fewer than 30 data points");
+		else
+			opinionSummaryContent.html("Democrat: "+opinionSummaryData["avgDemString"]+"\tRepublican: "+opinionSummaryData["avgRepString"]+"\tStandard Deviation: "+opinionSummaryData["stdDevString"]+"\tNumber of Opinions: "+opinionSummaryData["total"]);
+		
+		//Color the div
+		if (opinionSummaryData['total'] == 0)
+			colorMix = "ffffff";
+		else
+		{
+			colorMix = mixColors("FF6666", "6699FF", 1 - opinionSummaryData['avg']); //red, blue, ratio
+		}
+		opinionSummary.css("background-color", "#"+colorMix);
+	}
 	else
 	{
-		ratio = Number(individualSummaryData['Republican'])/(Number(individualSummaryData['Republican']) + Number(individualSummaryData['Democrat']));
-		colorMix = mixColors("FF6666", "6699FF", ratio); //red, blue, ratio
+		committeeSummaryContent.html("Error: query failed");
 	}
-	individualSummary.css("background-color", "#"+colorMix);
 
-
-	opinionSummary.css("background-color", "#ffffff");
 },
 
 //
