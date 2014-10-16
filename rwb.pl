@@ -1037,10 +1037,10 @@ sub CommitteeSummary {
     {
       if ($committeeCount[0] < 30)
       {
-        $latsw = $latsw - 1;
-        $longsw = $longsw + 1;
-        $latne = $latne + 1;
-        $longne = $longne + 1;
+        $latsw = $latsw - 0.01;
+        $longsw = $longsw - 0.01;
+        $latne = $latne + 0.01;
+        $longne = $longne + 0.01;
         $iterationCount++;
       }
     }
@@ -1146,10 +1146,10 @@ sub IndividualSummary {
     {
       if ($individualCount[0] < 30)
       {
-        $latsw = $latsw - 1;
-        $longsw = $longsw + 1;
-        $latne = $latne + 1;
-        $longne = $longne + 1;
+        $latsw = $latsw - 0.01;
+        $longsw = $longsw - 0.01;
+        $latne = $latne + 0.01;
+        $longne = $longne + 0.01;
         $iterationCount++;
       }
     }
@@ -1229,10 +1229,10 @@ sub OpinionSummary {
     {
       if ($opinionCount[0] < 30)
       {
-        $latsw = $latsw - 1;
-        $longsw = $longsw + 1;
-        $latne = $latne + 1;
-        $longne = $longne + 1;
+        $latsw = $latsw - 0.01;
+        $longsw = $longsw - 0.01;
+        $latne = $latne + 0.01;
+        $longne = $longne + 0.01;
         $iterationCount++;
       }
     }
